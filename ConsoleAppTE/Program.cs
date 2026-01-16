@@ -10,6 +10,7 @@ namespace ConsoleAppTE
     {
         static void Main(string[] args)
         {
+            Console.WriteLine("Работает?");
         }
     }
 }

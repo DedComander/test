@@ -1,0 +1,36 @@
+# Основные данные
+City=Санкт-Петербург
+ContractDate=20.02.2024
+LandlordName=Смирнов Алексей Владимирович
+Position=Директор
+Basis=Доверенности №123 от 15.01.2024
+TenantName=Кузнецова Анна Сергеевна
+
+# Паспортные данные
+PassportSeries=4012
+PassportNumber=987654
+PassportIssued=ОУФМС России по Центральному району г. Санкт-Петербурга 20.05.2015
+DepartmentCode=456-789
+
+# Данные помещения
+PropertyAddress=г. Санкт-Петербург, Невский пр., д. 100, кв. 15
+YearBuilt=2015
+RoomsCount=2
+TotalArea=65 (Шестьдесят пять)
+LivingArea=45 (Сорок пять)
+PropertyType=квартира
+KeysCount=3
+
+# Финансы
+MonthlyPayment=45000 (Сорок пять тысяч)
+
+# Дополнительные поля
+DocumentsBasis=Выписка из ЕГРН №56789012345 от 10.02.2024
+AdditionalTenants=Кузнецов Михаил Антонович, паспорт 4012 456789, выдан ОУФМС России по Центральному району г. Санкт-Петербурга 15.08.2018
+RegistryAuthority=МФЦ Центрального района г. Санкт-Петербурга
+RegistryDate=05.02.2024
+RegistryNumber=456-789
+CourtName=Санкт-Петербургский городской суд
+NotificationPeriod=60
+PaymentDeadline=5
+ContractEndDate=20.02.2025

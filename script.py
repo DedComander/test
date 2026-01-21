@@ -3,22 +3,51 @@ from tkinter import messagebox, filedialog
 from docx import Document
 from docx2pdf import convert
 import os
+import re
 
-def replace(doc, data):
+
+def replace_any_fields(doc, data_map):
     for paragraph in doc.paragraphs:
-        for run in paragraph.runs:
-            for key, value in data.items():
-                if key in run.text:
-                    run.text = run.text.replace(key, value)
+        original_text = paragraph.text
+        new_text = original_text
+
+        fields = re.findall(r'\[([^\]]+)\]', original_text)
+
+        for field in fields:
+            for key, value in data_map.items():
+                clean_field = ' '.join(field.split())
+                clean_key = ' '.join(key.replace('[', '').replace(']', '').split())
+
+                if clean_field == clean_key and value:
+                    new_text = new_text.replace(f'[{field}]', value)
+                    break
+
+        if new_text != original_text:
+            paragraph.clear()
+            paragraph.add_run(new_text)
 
     for table in doc.tables:
         for row in table.rows:
             for cell in row.cells:
                 for paragraph in cell.paragraphs:
-                    for run in paragraph.runs:
-                        for key, value in data.items():
-                            if key in run.text:
-                                run.text = run.text.replace(key, value)
+                    original_text = paragraph.text
+                    new_text = original_text
+
+                    fields = re.findall(r'\[([^\]]+)\]', original_text)
+
+                    for field in fields:
+                        for key, value in data_map.items():
+                            clean_field = ' '.join(field.split())
+                            clean_key = ' '.join(key.replace('[', '').replace(']', '').split())
+
+                            if clean_field == clean_key and value:
+                                new_text = new_text.replace(f'[{field}]', value)
+                                break
+
+                    if new_text != original_text:
+                        paragraph.clear()
+                        paragraph.add_run(new_text)
+
 
 def load_from_txt():
     file_path = filedialog.askopenfilename(filetypes=[("Text files", "*.txt")])
@@ -75,26 +104,27 @@ def load_from_txt():
         except Exception as e:
             messagebox.showerror("Ошибка", f"Не удалось загрузить TXT: {e}")
 
+
 def generate():
-    data = {
-        "[вписать нужное]": entry_city.get(),
-        "[число, месяц, год]": entry_date.get(),
-        "[Указать наименование собственника жилого помещения или управомоченного лица]": entry_owner.get(),
-        "[должность, Ф. И. О. полностью]": entry_position.get(),
-        "[устава, положения, доверенности]": entry_basis.get(),
-        "[Ф. И. О. полностью]": entry_tenant.get(),
-        "[вписать нужное]": entry_series.get(),
-        "[значение]": entry_num.get(),
-        "[наименование органа, выдавшего паспорт, дата выдачи]": entry_passport_issued.get(),
-        "[вписать нужное]": entry_code.get(),
-        "[вписать нужное]": entry_address.get(),
-        "[указать год постройки]": entry_year_built.get(),
-        "[значение]": entry_rooms.get(),
-        "[цифрами и прописью]": entry_area.get(),
-        "[цифрами и прописью]": entry_living_area.get(),
-        "[квартира/жилой дом/часть квартиры/часть жилого дома]": entry_room.get(),
-        "[значение]": entry_keys.get(),
-        "[цифрами и прописью]": entry_price.get(),
+    data_map = {
+        "вписать нужное": entry_city.get(),
+        "число, месяц, год": entry_date.get(),
+        "Указать наименование собственника жилого помещения или управомоченного лица": entry_owner.get(),
+        "должность, Ф. И. О. полностью": entry_position.get(),
+        "устава, положения, доверенности": entry_basis.get(),
+        "Ф. И. О. полностью": entry_tenant.get(),
+        "вписать нужное": entry_series.get(),
+        "значение": entry_num.get(),
+        "наименование органа, выдавшего паспорт, дата выдачи": entry_passport_issued.get(),
+        "вписать нужное": entry_code.get(),
+        "вписать нужное": entry_address.get(),
+        "указать год постройки": entry_year_built.get(),
+        "значение": entry_rooms.get(),
+        "цифрами и прописью": entry_area.get(),
+        "цифрами и прописью": entry_living_area.get(),
+        "квартира/жилой дом/часть квартиры/часть жилого дома": entry_room.get(),
+        "значение": entry_keys.get(),
+        "цифрами и прописью": entry_price.get(),
     }
 
     required_fields = [entry_city, entry_date, entry_owner, entry_tenant, entry_address, entry_room, entry_price]
@@ -109,83 +139,110 @@ def generate():
 
     try:
         doc = Document("template.docx")
-        replace(doc, data)
+
+        print("=== ДЕБАГ: Поиск полей в документе ===")
+        for i, paragraph in enumerate(doc.paragraphs[:10]):
+            text = paragraph.text
+            if '[' in text and ']' in text:
+                print(f"Параграф {i}: {text[:100]}...")
+
+        replace_any_fields(doc, data_map)
+
         save_path = filedialog.asksaveasfilename(
-            defaultextension=".docx", 
+            defaultextension=".docx",
             filetypes=[("Word Document", "*.docx"), ("All files", "*.*")],
             title="Сохранить договор как",
             initialfile="Договор_аренды.docx"
         )
+
         if save_path:
             doc.save(save_path)
             try:
                 pdf_path = save_path.replace(".docx", ".pdf")
                 convert(save_path, pdf_path)
                 messagebox.showinfo("Готово", f"Договор успешно создан!\n\nWord: {save_path}\nPDF: {pdf_path}")
+                os.startfile(save_path)
             except Exception as pdf_error:
-                messagebox.showwarning("Частичный успех", f"Word файл создан: {save_path}\nНо PDF не сконвертирован: {pdf_error}")
+                messagebox.showwarning("Частичный успех",
+                                       f"Word файл создан: {save_path}\nНо PDF не сконвертирован: {pdf_error}")
+                os.startfile(save_path)
+
     except Exception as e:
         messagebox.showerror("Ошибка", f"Ошибка при создании документа: {e}")
+        print(f"Детали ошибки: {e}")
+
 
 root = tk.Tk()
 root.title("Генератор договоров аренды жилья")
 root.geometry("650x900")
 
-canvas = tk.Canvas(root)
-scrollbar = tk.Scrollbar(root, orient="vertical", command=canvas.yview)
-scrollable_frame = tk.Frame(canvas)
-
-scrollable_frame.bind(
-    "<Configure>",
-    lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
-)
-
-canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
-canvas.configure(yscrollcommand=scrollbar.set)
 
 def create_field(parent, label_text):
-    label = tk.Label(parent, text=label_text, anchor="w")
-    label.pack(fill="x", pady=(10, 0))
-    entry = tk.Entry(parent, width=50)
-    entry.pack(pady=5)
+    frame = tk.Frame(parent)
+    frame.pack(fill="x", pady=5)
+
+    label = tk.Label(frame, text=label_text, width=25, anchor="w")
+    label.pack(side="left", padx=(0, 10))
+
+    entry = tk.Entry(frame, width=40)
+    entry.pack(side="left")
+
     return entry
 
-entry_city = create_field(scrollable_frame, "Город:")
-entry_date = create_field(scrollable_frame, "Дата (чч.мм.гггг):")
-entry_owner = create_field(scrollable_frame, "ФИО Наймодателя:")
-entry_position = create_field(scrollable_frame, "Должность Наймодателя:")
-entry_basis = create_field(scrollable_frame, "Основание действия (устав/доверенность):")
-entry_tenant = create_field(scrollable_frame, "ФИО Нанимателя:")
-entry_series = create_field(scrollable_frame, "Серия паспорта:")
-entry_num = create_field(scrollable_frame, "Номер паспорта:")
-entry_passport_issued = create_field(scrollable_frame, "Кем и когда выдан паспорт:")
-entry_code = create_field(scrollable_frame, "Код подразделения:")
-entry_address = create_field(scrollable_frame, "Адрес помещения:")
-entry_year_built = create_field(scrollable_frame, "Год постройки:")
-entry_rooms = create_field(scrollable_frame, "Количество комнат:")
-entry_area = create_field(scrollable_frame, "Общая площадь (кв. м.):")
-entry_living_area = create_field(scrollable_frame, "Жилая площадь (кв. м.):")
-entry_room = create_field(scrollable_frame, "Тип помещения (квартира/дом/часть):")
-entry_keys = create_field(scrollable_frame, "Количество ключей:")
-entry_price = create_field(scrollable_frame, "Ежемесячная плата:")
 
-btn_frame = tk.Frame(scrollable_frame)
+entry_city = create_field(root, "Город:")
+entry_date = create_field(root, "Дата (чч.мм.гггг):")
+entry_owner = create_field(root, "ФИО Наймодателя:")
+entry_position = create_field(root, "Должность Наймодателя:")
+entry_basis = create_field(root, "Основание действия:")
+entry_tenant = create_field(root, "ФИО Нанимателя:")
+entry_series = create_field(root, "Серия паспорта:")
+entry_num = create_field(root, "Номер паспорта:")
+entry_passport_issued = create_field(root, "Паспорт выдан:")
+entry_code = create_field(root, "Код подразделения:")
+entry_address = create_field(root, "Адрес помещения:")
+entry_year_built = create_field(root, "Год постройки:")
+entry_rooms = create_field(root, "Количество комнат:")
+entry_area = create_field(root, "Общая площадь:")
+entry_living_area = create_field(root, "Жилая площадь:")
+entry_room = create_field(root, "Тип помещения:")
+entry_keys = create_field(root, "Количество ключей:")
+entry_price = create_field(root, "Ежемесячная плата:")
+
+btn_frame = tk.Frame(root)
 btn_frame.pack(pady=20)
 
-btn_load = tk.Button(btn_frame, text="Загрузить из TXT", command=load_from_txt, 
-                     bg="#2196F3", fg="white", font=("Arial", 10))
-btn_load.pack(side=tk.LEFT, padx=5)
+btn_load = tk.Button(btn_frame, text="Загрузить из TXT", command=load_from_txt,
+                     bg="#2196F3", fg="white", font=("Arial", 10), width=15)
+btn_load.pack(side="left", padx=5)
 
-btn_generate = tk.Button(btn_frame, text="Создать договор", command=generate, 
-                         bg="#4CAF50", fg="white", font=("Arial", 10, "bold"))
-btn_generate.pack(side=tk.LEFT, padx=5)
+btn_generate = tk.Button(btn_frame, text="Создать договор", command=generate,
+                         bg="#4CAF50", fg="white", font=("Arial", 10, "bold"), width=15)
+btn_generate.pack(side="left", padx=5)
 
-info_label = tk.Label(scrollable_frame, 
-                      text="Убедитесь, что template.docx в папке со скриптом", 
+info_label = tk.Label(root,
+                      text="Убедитесь, что template.docx в папке со скриптом",
                       fg="blue", font=("Arial", 9))
 info_label.pack(pady=10)
 
-canvas.pack(side="left", fill="both", expand=True)
-scrollbar.pack(side="right", fill="y")
+
+def debug_template():
+    try:
+        doc = Document("template.docx")
+        print("=== СОДЕРЖИМОЕ ШАБЛОНА ===")
+        for i, paragraph in enumerate(doc.paragraphs[:20]):
+            text = paragraph.text.strip()
+            if text:
+                print(f"{i:3}: {text}")
+                for run in paragraph.runs:
+                    if '[' in run.text and ']' in run.text:
+                        print(f"     Run: '{run.text}'")
+    except Exception as e:
+        print(f"Ошибка при чтении шаблона: {e}")
+
+
+btn_debug = tk.Button(root, text="Отладка шаблона", command=debug_template,
+                      bg="#FF9800", fg="white", font=("Arial", 8))
+btn_debug.pack(pady=5)
 
 root.mainloop()

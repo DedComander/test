@@ -1,0 +1,36 @@
+# Основные данные
+City=Новосибирск
+ContractDate=05.04.2024
+LandlordName=Лебедев Сергей Николаевич
+Position=Учредитель
+Basis=Устава ООО "Комфорт"
+TenantName=Новикова Ольга Викторовна
+
+# Паспортные данные
+PassportSeries=5213
+PassportNumber=321654
+PassportIssued=МВД России по Октябрьскому району г. Новосибирска 30.06.2019
+DepartmentCode=321-654
+
+# Данные помещения
+PropertyAddress=г. Новосибирск, Красный пр., д. 200, кв. 42
+YearBuilt=2020
+RoomsCount=4
+TotalArea=90 (Девяносто)
+LivingArea=70 (Семьдесят)
+PropertyType=апартаменты
+KeysCount=4
+
+# Финансы
+MonthlyPayment=60000 (Шестьдесят тысяч)
+
+# Дополнительные поля
+DocumentsBasis=Акт приема-передачи квартиры от 01.04.2024
+AdditionalTenants=Новиков Виктор Андреевич, паспорт 5213 987123, выдан МВД России по Октябрьскому району г. Новосибирска 15.09.2021
+RegistryAuthority=Кадастровая палата по Новосибирской области
+RegistryDate=28.03.2024
+RegistryNumber=987-654
+CourtName=Новосибирский областной суд
+NotificationPeriod=90
+PaymentDeadline=20
+ContractEndDate=05.04.2025
